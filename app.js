@@ -1,19 +1,31 @@
 const express = require('express');
 const app = express();
+const records = require('./records');
+
+app.use(express.json()); // exporess middleware -> tells requests that comes in as json
 
 // Send a GET request to /quotes to read a list of quotes
-app.get('/quotes', (req, res) => {
-	res.json(data);
+app.get('/quotes', async (req, res) => {
+	const quotes = await records.getQuotes();
+	res.json(quotes);
 });
 
 // Send GET request to /quotes/:id read a quote
 // Send a GET request to /quotes to read a list of quotes
-app.get('/quotes/:id', (req, res) => {
-	const quote = data.quotes.find(quote => quote.id == req.params.id);
+app.get('/quotes/:id', async (req, res) => {
+	const quote = await records.getQuote(req.params.id);
 	res.json(quote);
 });
 
 // Send POST request to /quotes to create new quote
+app.post('/quotes', async (req, res) => {
+	const quote = await records.createQuote({
+		quote: req.body.quote,
+		author: req.body.author
+	});
+	res.json(quote);
+});
+
 // Send PUT request to /quotes/:id to update quote
 // Send DELETE request to /quotes/:id to delete a quote
 // Send a GET request to /quotes/quote/random read a random quote
