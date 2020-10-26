@@ -6,24 +6,39 @@ app.use(express.json()); // exporess middleware -> tells requests that comes in 
 
 // Send a GET request to /quotes to read a list of quotes
 app.get('/quotes', async (req, res) => {
-	const quotes = await records.getQuotes();
-	res.json(quotes);
+	try {
+		const quotes = await records.getQuotes();
+		res.json(quotes);
+	} catch(err) {
+		res.json({message: err.message});
+	}
+	
 });
 
 // Send GET request to /quotes/:id read a quote
 // Send a GET request to /quotes to read a list of quotes
 app.get('/quotes/:id', async (req, res) => {
-	const quote = await records.getQuote(req.params.id);
-	res.json(quote);
+	try {
+		const quote = await records.getQuote(req.params.id);
+		res.json(quote);
+	} catch(err) {
+		res.json({message: err.message});
+	}
+	
 });
 
 // Send POST request to /quotes to create new quote
 app.post('/quotes', async (req, res) => {
-	const quote = await records.createQuote({
-		quote: req.body.quote,
-		author: req.body.author
-	});
-	res.json(quote);
+	try {
+		const quote = await records.createQuote({
+			quote: req.body.quote,
+			author: req.body.author
+		});
+		res.json(quote);
+	}catch(err) {
+		res.json({message: err.message});
+	}
+	
 });
 
 // Send PUT request to /quotes/:id to update quote
