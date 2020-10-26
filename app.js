@@ -4,6 +4,7 @@ const records = require('./records');
 
 app.use(express.json()); // exporess middleware -> tells requests that comes in as json
 
+
 // Send a GET request to /quotes to read a list of quotes
 app.get('/quotes', async (req, res) => {
 	try {
@@ -70,36 +71,34 @@ app.put('/quotes/:id', async (req, res) => {
 	}
 })
 // Send DELETE request to /quotes/:id to delete a quote
-app.delete('/quotes/:id', async (req, res) => {
+app.delete('/quotes/:id', async (req, res, next) => {
 	try {
 		const quote = await records.getQuote(req.params.id);
-		await records.deleteQuote(quote);
-		res.status(204).end();
-
+		if (quote) {
+			await records.deleteQuote(quote);
+			res.status(204).end();
+		} else {
+			next();
+		}
 	} catch(err) {
 		res.status(500).json({message: err.message});
 	}
 });
 // Send a GET request to /quotes/quote/random read a random quote
 
-app.listen(3000, () => console.log('Quote API listening on port 3000!'));
+app.use((req, res, next) => {
+	const err = new Error("Not found");
+	err.status = 404;
+	next(err);
+});
 
-const data = {
-    quotes: [
-      {
-        id: 8721,
-        quote: "We must accept finite disappointment, but we must never lose infinite hope.",
-        author: "Martin Luther King"
-      },
-      {
-        id: 5779,
-        quote: "Use what you’ve been through as fuel, believe in yourself and be unstoppable!",
-        author: "Yvonne Pierre"
-      },
-      {
-        id: 3406,
-        quote: "To succeed, you have to do something and be very bad at it for a while. You have to look bad before you can look really good.",
-        author: "Barbara DeAngelis"
-      }
-    ]
-  }
+app.use((err, req, res, next) => {
+	res.status(err.status || 500);
+	res.json({
+		error: {
+			message: err.message
+		}
+	})
+});
+
+app.listen(3000, () => console.log('Quote API listening on port 3000!'));
