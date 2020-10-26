@@ -10,7 +10,7 @@ app.get('/quotes', async (req, res) => {
 		const quotes = await records.getQuotes();
 		res.json(quotes);
 	} catch(err) {
-		res.json({message: err.message});
+		res.status(500).json({message: err.message});
 	}
 	
 });
@@ -20,9 +20,14 @@ app.get('/quotes', async (req, res) => {
 app.get('/quotes/:id', async (req, res) => {
 	try {
 		const quote = await records.getQuote(req.params.id);
-		res.json(quote);
+		if (quote) {
+			res.json(quote);
+		} else {
+			res.status(404).json({message: "Quote does not exist"});
+		}
+		
 	} catch(err) {
-		res.json({message: err.message});
+		res.status(500).json({message: err.message});
 	}
 	
 });
@@ -30,19 +35,51 @@ app.get('/quotes/:id', async (req, res) => {
 // Send POST request to /quotes to create new quote
 app.post('/quotes', async (req, res) => {
 	try {
-		const quote = await records.createQuote({
-			quote: req.body.quote,
-			author: req.body.author
-		});
-		res.json(quote);
+		if (req.body.author && req.body.quote) {
+			const quote = await records.createQuote({
+				quote: req.body.quote,
+				author: req.body.author
+			});
+			res.status(201).json(quote);
+		} else {
+			res.status(400).json({message: "Bad request - requred author and quote"});
+		}
+		
 	}catch(err) {
-		res.json({message: err.message});
+		res.status(500).json({message: err.message});
 	}
 	
 });
 
 // Send PUT request to /quotes/:id to update quote
+app.put('/quotes/:id', async (req, res) => {
+	try	{
+		const quote = await records.getQuote(req.params.id);
+		if (quote) {
+			quote.quote = req.body.quote ? req.body.quote : quote.quote;
+			quote.author = req.body.author ? req.body.author : quote.author;
+			
+			await records.updateQuote(quote);
+			res.status(204).end();
+		} else {
+			res.status(404).json({message: "Quote does not exist"});
+		}
+		
+	} catch(err) {
+		res.status(500).json({message: err.message});
+	}
+})
 // Send DELETE request to /quotes/:id to delete a quote
+app.delete('/quotes/:id', async (req, res) => {
+	try {
+		const quote = await records.getQuote(req.params.id);
+		await records.deleteQuote(quote);
+		res.status(204).end();
+
+	} catch(err) {
+		res.status(500).json({message: err.message});
+	}
+});
 // Send a GET request to /quotes/quote/random read a random quote
 
 app.listen(3000, () => console.log('Quote API listening on port 3000!'));
